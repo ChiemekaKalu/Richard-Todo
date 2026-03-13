@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Task HQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #181818;
+    --surface2: #222222;
+    --border: #2a2a2a;
+    --text: #e8e4dc;
+    --muted: #666;
+    --fire: #ff5c35;
+    --gold: #f5c842;
+    --mint: #3ddc84;
+    --sky: #4ea8de;
+    --lavender: #b57bee;
+    --pink: #ff6b9d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .header {
+    margin-bottom: 48px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .header-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  .header h1 span {
+    color: var(--fire);
+  }
+
+  .header-sub {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .section {
+    margin-bottom: 40px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.05s; }
+  .section:nth-child(3) { animation-delay: 0.1s; }
+  .section:nth-child(4) { animation-delay: 0.15s; }
+  .section:nth-child(5) { animation-delay: 0.2s; }
+  .section:nth-child(6) { animation-delay: 0.25s; }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .section-label .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .section-label h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .section-label .count {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .task {
+    display: grid;
+    grid-template-columns: 20px 1fr auto;
+    align-items: start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .task::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent, var(--border));
+    border-radius: 6px 0 0 6px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .task:hover { background: var(--surface2); border-color: #333; }
+  .task:hover::before { opacity: 1; }
+
+  .task.done { opacity: 0.35; }
+  .task.done .task-name { text-decoration: line-through; }
+
+  .checkbox {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #3a3a3a;
+    border-radius: 3px;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .task.done .checkbox {
+    background: var(--accent, #3a3a3a);
+    border-color: var(--accent, #3a3a3a);
+  }
+
+  .task.done .checkbox::after {
+    content: '✓';
+    font-size: 9px;
+    color: #000;
+  }
+
+  .task-body { min-width: 0; }
+
+  .task-name {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .task-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: #222;
+    color: var(--muted);
+    border: 1px solid #2e2e2e;
+  }
+
+  .tag.urgent   { background: rgba(255,92,53,0.12);  color: var(--fire);    border-color: rgba(255,92,53,0.25); }
+  .tag.sunday   { background: rgba(245,200,66,0.1);  color: var(--gold);    border-color: rgba(245,200,66,0.2); }
+  .tag.recurring{ background: rgba(61,220,132,0.1);  color: var(--mint);    border-color: rgba(61,220,132,0.2); }
+  .tag.people   { background: rgba(78,168,222,0.1);  color: var(--sky);     border-color: rgba(78,168,222,0.2); }
+  .tag.money    { background: rgba(181,123,238,0.1); color: var(--lavender);border-color: rgba(181,123,238,0.2); }
+  .tag.someday  { background: rgba(255,107,157,0.1); color: var(--pink);    border-color: rgba(255,107,157,0.2); }
+
+  .deadline {
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: center;
+    letter-spacing: 0.04em;
+  }
+
+  .deadline.hot  { color: var(--fire); }
+  .deadline.warm { color: var(--gold); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-eyebrow">Task HQ · Updated March 2, 2026</div>
+    <h1>The <span>Full</span><br>Load</h1>
+    <div class="header-sub">All responsibilities, organized by urgency.</div>
+  </div>
+
+  <!-- FIRE: TODAY / THIS WEEK -->
+  <div class="section">
+    <div class="section-label">
+      <div class="dot" style="background:var(--fire)"></div>
+      <h2>🔥 On Fire — Do Now</h2>
+      <span class="count">4 tasks</span>
+    </div>
+    <div class="tasks">
+      <div class="task" id="fire-1" style="--accent:var(--fire)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Plan Sofia's birthday</div>
+          <div class="task-meta"><span class="tag sunday">This Sunday Mar 8</span><span class="tag people">Sofia</span></div>
+        </div>
+        <div class="deadline hot">Sun Mar 8</div>
+      </div>
+      <div class="task" id="fire-2" style="--accent:var(--fire)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Grady lease — finalize and sign</div>
+          <div class="task-meta"><span class="tag urgent">Urgent</span><span class="tag people">Grady</span></div>
+        </div>
+        <div class="deadline hot">ASAP</div>
+      </div>
+      <div class="task" id="fire-3" style="--accent:var(--fire)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Secure parking spots for Grady and Sofia</div>
+          <div class="task-meta"><span class="tag urgent">Urgent</span><span class="tag people">Grady · Sofia</span></div>
+        </div>
+        <div class="deadline hot">ASAP</div>
+      </div>
+      <div class="task" id="fire-4" style="--accent:var(--fire)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Tell Michael what to do + get papers from Nick based on shortages</div>
+          <div class="task-meta"><span class="tag urgent">Urgent</span><span class="tag people">Michael · Nick</span></div>
+        </div>
+        <div class="deadline hot">Today</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- THIS WEEK -->
+  <div class="section">
+    <div class="section-label">
+      <div class="dot" style="background:var(--gold)"></div>
+      <h2>📅 This Week</h2>
+      <span class="count">6 tasks</span>
+    </div>
+    <div class="tasks">
+      <div class="task" id="week-1" style="--accent:var(--gold)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Fill 875 St. John room</div>
+          <div class="task-meta"><span class="tag">Property Mgmt</span></div>
+        </div>
+        <div class="deadline warm">This week</div>
+      </div>
+      <div class="task" id="week-2" style="--accent:var(--gold)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Fill 775 Julian basement room</div>
+          <div class="task-meta"><span class="tag">Property Mgmt</span></div>
+        </div>
+        <div class="deadline warm">This week</div>
+      </div>
+      <div class="task" id="week-3" style="--accent:var(--gold)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Organize all leases</div>
+          <div class="task-meta"><span class="tag">Property Mgmt</span></div>
+        </div>
+        <div class="deadline warm">This week</div>
+      </div>
+      <div class="task" id="week-4" style="--accent:var(--gold)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Build Excel tracker for Michael, Grady, and employees</div>
+          <div class="task-meta"><span class="tag people">Michael · Grady</span></div>
+        </div>
+        <div class="deadline warm">This week</div>
+      </div>
+      <div class="task" id="week-5" style="--accent:var(--gold)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Organize and fill Steve's property manager Excel</div>
+          <div class="task-meta"><span class="tag">Property Mgmt</span><span class="tag people">Steve</span></div>
+        </div>
+        <div class="deadline warm">This week</div>
+      </div>
+      <div class="task" id="week-6" style="--accent:var(--gold)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Perplexity AI event — plan for this month (×2/month)</div>
+          <div class="task-meta"><span class="tag recurring">2× / month</span></div>
+        </div>
+        <div class="deadline warm">Mar</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAILY HABITS -->
+  <div class="section">
+    <div class="section-label">
+      <div class="dot" style="background:var(--mint)"></div>
+      <h2>🔁 Daily Habits</h2>
+      <span class="count">2 tasks</span>
+    </div>
+    <div class="tasks">
+      <div class="task" id="daily-1" style="--accent:var(--mint)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">MMA / training — show up every day</div>
+          <div class="task-meta"><span class="tag recurring">Daily</span></div>
+        </div>
+        <div class="deadline">Every day</div>
+      </div>
+      <div class="task" id="daily-2" style="--accent:var(--mint)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Petitioning — hit the streets</div>
+          <div class="task-meta"><span class="tag recurring">Daily</span></div>
+        </div>
+        <div class="deadline">Every day</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONGOING PROJECTS -->
+  <div class="section">
+    <div class="section-label">
+      <div class="dot" style="background:var(--sky)"></div>
+      <h2>🔧 Ongoing Projects</h2>
+      <span class="count">5 tasks</span>
+    </div>
+    <div class="tasks">
+      <div class="task" id="ongoing-1" style="--accent:var(--sky)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Set up cleaners for both properties — same time every month (no more chasing them)</div>
+          <div class="task-meta"><span class="tag">Property Mgmt</span><span class="tag recurring">Monthly</span></div>
+        </div>
+        <div class="deadline">ASAP</div>
+      </div>
+      <div class="task" id="ongoing-2" style="--accent:var(--sky)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Build petitioning onboarding system — get enough people collecting signatures</div>
+          <div class="task-meta"><span class="tag">Petitioning</span></div>
+        </div>
+        <div class="deadline">Rolling</div>
+      </div>
+      <div class="task" id="ongoing-3" style="--accent:var(--sky)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Organize the petitioning drive structure</div>
+          <div class="task-meta"><span class="tag">Petitioning</span></div>
+        </div>
+        <div class="deadline">Rolling</div>
+      </div>
+      <div class="task" id="ongoing-4" style="--accent:var(--sky)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Onboard Jesse for petitioning</div>
+          <div class="task-meta"><span class="tag people">Jesse</span><span class="tag">Petitioning</span></div>
+        </div>
+        <div class="deadline">Soon</div>
+      </div>
+      <div class="task" id="ongoing-5" style="--accent:var(--sky)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Figure out taxes — file or extend</div>
+          <div class="task-meta"><span class="tag money">Finances</span></div>
+        </div>
+        <div class="deadline warm">Deadline TBD</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOMEDAY / WHEN READY -->
+  <div class="section">
+    <div class="section-label">
+      <div class="dot" style="background:var(--lavender)"></div>
+      <h2>💡 Someday / When Ready</h2>
+      <span class="count">5 tasks</span>
+    </div>
+    <div class="tasks">
+      <div class="task" id="someday-1" style="--accent:var(--lavender)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Start podcast with Keshav — hire Michael as part of the content play</div>
+          <div class="task-meta"><span class="tag someday">Someday</span><span class="tag people">Keshav · Michael</span></div>
+        </div>
+        <div class="deadline">Someday</div>
+      </div>
+      <div class="task" id="someday-2" style="--accent:var(--lavender)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Meal prep and grocery shopping routine</div>
+          <div class="task-meta"><span class="tag someday">Someday</span></div>
+        </div>
+        <div class="deadline">Someday</div>
+      </div>
+      <div class="task" id="someday-3" style="--accent:var(--lavender)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Go through bank account and audit it</div>
+          <div class="task-meta"><span class="tag money">Finances</span></div>
+        </div>
+        <div class="deadline">Soon</div>
+      </div>
+      <div class="task" id="someday-4" style="--accent:var(--lavender)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Clean room, put up posters, fix bed</div>
+          <div class="task-meta"><span class="tag someday">Personal</span></div>
+        </div>
+        <div class="deadline">Weekend</div>
+      </div>
+      <div class="task" id="someday-5" style="--accent:var(--lavender)">
+        <div class="checkbox"></div>
+        <div class="task-body">
+          <div class="task-name">Perplexity AI events — lock in recurring schedule (×2/month)</div>
+          <div class="task-meta"><span class="tag recurring">2× / month</span></div>
+        </div>
+        <div class="deadline">Mar–Apr</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Persist checkbox state in localStorage so it survives page reloads
+  const STORAGE_KEY = 'taskhq-done';
+
+  function loadDone() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+
+  function saveDone(done) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(done));
+  }
+
+  // Restore state on load
+  const done = loadDone();
+  document.querySelectorAll('.task[id]').forEach(task => {
+    if (done[task.id]) task.classList.add('done');
+    task.addEventListener('click', () => {
+      task.classList.toggle('done');
+      done[task.id] = task.classList.contains('done');
+      saveDone(done);
+    });
+  });
+</script>
+</body>
+</html>
